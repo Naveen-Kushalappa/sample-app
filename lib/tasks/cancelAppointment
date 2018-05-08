@@ -1,0 +1,36 @@
+require 'faraday'
+
+namespace :cancelAppointment do
+
+  desc "Import Data from Csv"
+  task cancelAppointmentForPatient: :environment do
+
+    # Task here
+    filename= File.read('excel_docs/AppointmentList.csv')
+    csv     = CSV.parse(filename, :headers => true)
+    value   = []
+
+    csv.each do |row|
+
+      attributes  = row.to_hash
+      attributes[:transactionDate]= '2017-12-31'
+      value << attributes
+    end
+
+    # Post data to url
+    response = connection.post do |req|
+      req.url "webservice/addPaymentAdjustment"
+      req.headers['Content-Type'] = 'application/json'
+      req.body = value.to_json
+    end
+
+    puts response.body
+  end
+
+  def connection
+
+    server  = OPS_SERVER['server_url']
+    Faraday.new(:url => "#{server}", :ssl => {:verify => !Rails.env.development?})
+  end
+
+end
